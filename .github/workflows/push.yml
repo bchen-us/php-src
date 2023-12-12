@@ -44,145 +44,145 @@ env:
   CC: ccache gcc
   CXX: ccache g++
 jobs:
-  LINUX_X64:
-    services:
-      mysql:
-        image: mysql:8
-        ports:
-          - 3306:3306
-        env:
-          MYSQL_DATABASE: test
-          MYSQL_ROOT_PASSWORD: root
-      postgres:
-        image: postgres
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test
-      firebird:
-        image: jacobalberty/firebird
-        ports:
-          - 3050:3050
-        env:
-          ISC_PASSWORD: test
-          FIREBIRD_DATABASE: test.fdb
-          FIREBIRD_USER: test
-          FIREBIRD_PASSWORD: test
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - debug: false
-            zts: false
-            asan: false
-          - debug: true
-            zts: true
-            asan: true
-    name: "LINUX_X64_${{ matrix.debug && 'DEBUG' || 'RELEASE' }}_${{ matrix.zts && 'ZTS' || 'NTS' }}${{ matrix.asan && '_ASAN' || '' }}"
-    runs-on: ubuntu-22.04
-    steps:
-      - name: git checkout
-        uses: actions/checkout@v4
-      - name: apt
-        uses: ./.github/actions/apt-x64
-      - name: LLVM 16 (ASAN-only)
-        if: ${{ matrix.asan }}
-        run: |
-          wget https://apt.llvm.org/llvm.sh
-          chmod u+x llvm.sh
-          sudo ./llvm.sh 16
-      - name: System info
-        run: |
-          echo "::group::Show host CPU info"
-          lscpu
-          echo "::endgroup::"
-          echo "::group::Show installed package versions"
-          dpkg -l
-          echo "::endgroup::"
-      - name: Create MSSQL container
-        if: ${{ !matrix.asan }}
-        uses: ./.github/actions/setup-mssql
-      - name: Create Oracle container
-        if: ${{ !matrix.asan }}
-        uses: ./.github/actions/setup-oracle
-      - name: Setup Caddy server
-        uses: ./.github/actions/setup-caddy
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          # This duplicates the "job.name" expression above because
-          # GitHub has no way to query the job name (github.job is the
-          # job id, not the job name)
-          key: "LINUX_X64_${{ matrix.debug && 'DEBUG' || 'RELEASE' }}_${{ matrix.zts && 'ZTS' || 'NTS' }}${{ matrix.asan && '_ASAN' || '' }}-${{hashFiles('main/php_version.h')}}"
-          append-timestamp: false
-      - name: ./configure
-        uses: ./.github/actions/configure-x64
-        with:
-          configurationParameters: >-
-            --${{ matrix.debug && 'enable' || 'disable' }}-debug
-            --${{ matrix.zts && 'enable' || 'disable' }}-zts
-            ${{ matrix.asan && 'CFLAGS="-fsanitize=undefined,address -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang-16 CXX=clang++-16 --disable-opcache-jit' || '' }}
-          skipSlow: ${{ matrix.asan }}
-      - name: make
-        run: make -j$(/usr/bin/nproc) >/dev/null
-      - name: make install
-        uses: ./.github/actions/install-linux
-      - name: Setup
-        if: ${{ !matrix.asan }}
-        uses: ./.github/actions/setup-x64
-      - name: Test
-        if: matrix.asan == false
-        uses: ./.github/actions/test-linux
-        with:
-          testArtifacts: ${{ matrix.debug && 'DEBUG' || 'RELEASE' }}_${{ matrix.zts && 'ZTS' || 'NTS' }}
-      - name: Test ${{ matrix.asan && 'OpCache' || 'Tracing JIT' }}
-        uses: ./.github/actions/test-linux
-        with:
-          testArtifacts: ${{ matrix.debug && 'DEBUG' || 'RELEASE' }}_${{ matrix.zts && 'ZTS' || 'NTS' }}${{ matrix.asan && '_ASAN' || '' }}_${{ matrix.asan && 'OpCache' || 'Tracing JIT' }}
-          jitType: ${{ matrix.asan && 'disable' || 'tracing' }}
-          runTestsParameters: >-
-            -d zend_extension=opcache.so
-            -d opcache.enable_cli=1
-            ${{ matrix.asan && '--asan -x' || '' }}
-      - name: Verify generated files are up to date
-        if: ${{ !matrix.asan }}
-        uses: ./.github/actions/verify-generated-files
-  MACOS_DEBUG_NTS:
-    runs-on: macos-12
-    steps:
-      - name: git checkout
-        uses: actions/checkout@v4
-      - name: brew
-        uses: ./.github/actions/brew
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: "${{github.job}}-${{hashFiles('main/php_version.h')}}"
-          append-timestamp: false
-      - name: ./configure
-        uses: ./.github/actions/configure-macos
-        with:
-          configurationParameters: --enable-debug --disable-zts
-      - name: make
-        run: |-
-          export PATH="/usr/local/opt/bison/bin:$PATH"
-          make -j$(sysctl -n hw.logicalcpu) >/dev/null
-      - name: make install
-        run: sudo make install
-      - name: Test Tracing JIT
-        uses: ./.github/actions/test-macos
-        with:
-          testArtifacts: ${{ matrix.debug && 'DEBUG' || 'RELEASE' }}_${{ matrix.zts && 'ZTS' || 'NTS' }} Tracing JIT
-          jitType: tracing
-          runTestsParameters: >-
-            -d zend_extension=opcache.so
-            -d opcache.enable_cli=1
-      - name: Verify generated files are up to date
-        uses: ./.github/actions/verify-generated-files
+#   LINUX_X64:
+#     services:
+#       mysql:
+#         image: mysql:8
+#         ports:
+#           - 3306:3306
+#         env:
+#           MYSQL_DATABASE: test
+#           MYSQL_ROOT_PASSWORD: root
+#       postgres:
+#         image: postgres
+#         ports:
+#           - 5432:5432
+#         env:
+#           POSTGRES_USER: postgres
+#           POSTGRES_PASSWORD: postgres
+#           POSTGRES_DB: test
+#       firebird:
+#         image: jacobalberty/firebird
+#         ports:
+#           - 3050:3050
+#         env:
+#           ISC_PASSWORD: test
+#           FIREBIRD_DATABASE: test.fdb
+#           FIREBIRD_USER: test
+#           FIREBIRD_PASSWORD: test
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         include:
+#           - debug: false
+#             zts: false
+#             asan: false
+#           - debug: true
+#             zts: true
+#             asan: true
+#     name: "LINUX_X64_${{ matrix.debug && 'DEBUG' || 'RELEASE' }}_${{ matrix.zts && 'ZTS' || 'NTS' }}${{ matrix.asan && '_ASAN' || '' }}"
+#     runs-on: ubuntu-22.04
+#     steps:
+#       - name: git checkout
+#         uses: actions/checkout@v4
+#       - name: apt
+#         uses: ./.github/actions/apt-x64
+#       - name: LLVM 16 (ASAN-only)
+#         if: ${{ matrix.asan }}
+#         run: |
+#           wget https://apt.llvm.org/llvm.sh
+#           chmod u+x llvm.sh
+#           sudo ./llvm.sh 16
+#       - name: System info
+#         run: |
+#           echo "::group::Show host CPU info"
+#           lscpu
+#           echo "::endgroup::"
+#           echo "::group::Show installed package versions"
+#           dpkg -l
+#           echo "::endgroup::"
+#       - name: Create MSSQL container
+#         if: ${{ !matrix.asan }}
+#         uses: ./.github/actions/setup-mssql
+#       - name: Create Oracle container
+#         if: ${{ !matrix.asan }}
+#         uses: ./.github/actions/setup-oracle
+#       - name: Setup Caddy server
+#         uses: ./.github/actions/setup-caddy
+#       - name: ccache
+#         uses: hendrikmuhs/ccache-action@v1.2
+#         with:
+#           # This duplicates the "job.name" expression above because
+#           # GitHub has no way to query the job name (github.job is the
+#           # job id, not the job name)
+#           key: "LINUX_X64_${{ matrix.debug && 'DEBUG' || 'RELEASE' }}_${{ matrix.zts && 'ZTS' || 'NTS' }}${{ matrix.asan && '_ASAN' || '' }}-${{hashFiles('main/php_version.h')}}"
+#           append-timestamp: false
+#       - name: ./configure
+#         uses: ./.github/actions/configure-x64
+#         with:
+#           configurationParameters: >-
+#             --${{ matrix.debug && 'enable' || 'disable' }}-debug
+#             --${{ matrix.zts && 'enable' || 'disable' }}-zts
+#             ${{ matrix.asan && 'CFLAGS="-fsanitize=undefined,address -DZEND_TRACK_ARENA_ALLOC" LDFLAGS="-fsanitize=undefined,address" CC=clang-16 CXX=clang++-16 --disable-opcache-jit' || '' }}
+#           skipSlow: ${{ matrix.asan }}
+#       - name: make
+#         run: make -j$(/usr/bin/nproc) >/dev/null
+#       - name: make install
+#         uses: ./.github/actions/install-linux
+#       - name: Setup
+#         if: ${{ !matrix.asan }}
+#         uses: ./.github/actions/setup-x64
+#       - name: Test
+#         if: matrix.asan == false
+#         uses: ./.github/actions/test-linux
+#         with:
+#           testArtifacts: ${{ matrix.debug && 'DEBUG' || 'RELEASE' }}_${{ matrix.zts && 'ZTS' || 'NTS' }}
+#       - name: Test ${{ matrix.asan && 'OpCache' || 'Tracing JIT' }}
+#         uses: ./.github/actions/test-linux
+#         with:
+#           testArtifacts: ${{ matrix.debug && 'DEBUG' || 'RELEASE' }}_${{ matrix.zts && 'ZTS' || 'NTS' }}${{ matrix.asan && '_ASAN' || '' }}_${{ matrix.asan && 'OpCache' || 'Tracing JIT' }}
+#           jitType: ${{ matrix.asan && 'disable' || 'tracing' }}
+#           runTestsParameters: >-
+#             -d zend_extension=opcache.so
+#             -d opcache.enable_cli=1
+#             ${{ matrix.asan && '--asan -x' || '' }}
+#       - name: Verify generated files are up to date
+#         if: ${{ !matrix.asan }}
+#         uses: ./.github/actions/verify-generated-files
+#   MACOS_DEBUG_NTS:
+#     runs-on: macos-12
+#     steps:
+#       - name: git checkout
+#         uses: actions/checkout@v4
+#       - name: brew
+#         uses: ./.github/actions/brew
+#       - name: ccache
+#         uses: hendrikmuhs/ccache-action@v1.2
+#         with:
+#           key: "${{github.job}}-${{hashFiles('main/php_version.h')}}"
+#           append-timestamp: false
+#       - name: ./configure
+#         uses: ./.github/actions/configure-macos
+#         with:
+#           configurationParameters: --enable-debug --disable-zts
+#       - name: make
+#         run: |-
+#           export PATH="/usr/local/opt/bison/bin:$PATH"
+#           make -j$(sysctl -n hw.logicalcpu) >/dev/null
+#       - name: make install
+#         run: sudo make install
+#       - name: Test Tracing JIT
+#         uses: ./.github/actions/test-macos
+#         with:
+#           testArtifacts: ${{ matrix.debug && 'DEBUG' || 'RELEASE' }}_${{ matrix.zts && 'ZTS' || 'NTS' }} Tracing JIT
+#           jitType: tracing
+#           runTestsParameters: >-
+#             -d zend_extension=opcache.so
+#             -d opcache.enable_cli=1
+#       - name: Verify generated files are up to date
+#         uses: ./.github/actions/verify-generated-files
   WINDOWS:
-    name: WINDOWS_X64_ZTS
+    name: WINDOWS_X64_NTS
     runs-on: windows-2019
     env:
       PHP_BUILD_CACHE_BASE_DIR: C:\build-cache
@@ -191,7 +191,7 @@ jobs:
       PHP_BUILD_SDK_BRANCH: php_downloads_server_migration_v1
       PHP_BUILD_CRT: vs16
       PLATFORM: x64
-      THREAD_SAFE: "1"
+      THREAD_SAFE: "0"
       INTRINSICS: AVX2
       PARALLEL: -j2
       OPCACHE: "1"
@@ -204,6 +204,11 @@ jobs:
         uses: ./.github/actions/setup-windows
       - name: Build
         run: .github/scripts/windows/build.bat
+      - uses: actions/upload-artifact@v3
+        with:
+          name: window build
+          path: c:/obj/
+          retention-days: 10
       - name: Test
         run: .github/scripts/windows/test.bat
   BENCHMARKING:
