@@ -110,7 +110,7 @@ jobs:
   #     - name: Verify generated files are up to date
   #       uses: ./.github/actions/verify-generated-files
   WINDOWS:
-    name: WINDOWS_X64_ZTS
+    name: WINDOWS_X64_NTS
     runs-on: windows-2019
     env:
       PHP_BUILD_CACHE_BASE_DIR: C:\build-cache
@@ -119,7 +119,7 @@ jobs:
       PHP_BUILD_SDK_BRANCH: php-sdk-2.2.0
       PHP_BUILD_CRT: vs16
       PLATFORM: x64
-      THREAD_SAFE: "1"
+      THREAD_SAFE: "0"
       INTRINSICS: AVX2
       PARALLEL: -j2
       OPCACHE: "1"
