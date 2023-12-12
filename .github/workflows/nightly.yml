@@ -914,7 +914,7 @@ jobs:
         run: .github/scripts/windows/build.bat
       - uses: actions/upload-artifact@v3
         with:
-          name: window build
+          name: "${{ matrix.branch.name }}_WINDOWS_${{ matrix.x64 && 'X64' || 'X86' }}_${{ matrix.zts && 'ZTS' || 'NTS' }}"
           path: c:/obj/
           retention-days: 10
       # - name: Test
